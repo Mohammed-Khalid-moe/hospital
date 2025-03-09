@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>مكالمة الفيديو - المريض</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      padding: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #333333;
+      margin-bottom: 20px;
+    }
+
+    .video-container {
+      width: 100%;
+      height: 700px;
+      background-color: black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    #smallVideo {
+      width: 150px;
+      height: 100px;
+      border: 2px solid white;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: none;
+    }
+
+    .video-controls {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .video-controls button {
+      padding: 10px;
+      border-radius: 50%;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .video-controls button:hover {
+      opacity: 0.8;
+    }
+
+    .video-controls i {
+      font-size: 18px;
+    }
+
+    .message-container {
+      margin-top: 20px;
+    }
+
+    .message-container input {
+      padding: 10px;
+      width: 70%;
+      border-radius: 5px;
+      border: 1px solid #cccccc;
+    }
+
+    .message-container button {
+      padding: 10px 20px;
+      border-radius: 5px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .message-container button:hover {
+      background-color: #45a049;
+    }
+
+    #messages {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e9e9e9;
+      border: 2px solid #4CAF50;
+      border-radius: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    #messages p {
+      background-color: #ffffff;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 5px 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .control-label {
+      display: block;
+      margin-top: 5px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .waiting {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .loading-icon {
+      font-size: 24px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .appointment-container {
+      margin-top: 20px;
+    }
+
+    .appointment-container input {
+      padding: 10px;
+      width: 50%;
+      border-radius: 5px;
+      border: 1px solid #cccccc;
+      margin-right: 10px;
+    }
+
+    .appointment-container button {
+      padding: 10px 20px;
+      border-radius: 5px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .appointment-container button:hover {
+      background-color: #45a049;
+    }
+
+    #appointmentNumber {
+      margin-top: 20px;
+      color: #333;
+      font-size: 16px;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>مكالمة الفيديو - المريض</h1>
+    <div class="video-container" id="videoContainer">
+      <div class="waiting" id="waitingMessage">
+        <span>في الانتظار</span>
+        <i class="fas fa-spinner loading-icon"></i>
+      </div>
+      <video id="smallVideo"></video>
+    </div>
+    <div class="video-controls">
+      <div>
+        <button onclick="joinCall()" style="background-color: #4CAF50;"><i class="fas fa-phone-alt"></i></button>
+        <span class="control-label">الانضمام إلى المكالمة</span>
+      </div>
+      <div>
+        <button onclick="endCall()" style="background-color: #f44336;"><i class="fas fa-phone-slash"></i></button>
+        <span class="control-label">إنهاء المكالمة</span>
+      </div>
+      <div>
+        <button onclick="toggleCamera()" style="background-color: #2196F3;"><i class="fas fa-video"></i></button>
+        <span class="control-label">الكاميرا</span>
+      </div>
+      <div>
+        <button onclick="toggleAudio()" style="background-color: #FF9800;"><i class="fas fa-microphone"></i></button>
+        <span class="control-label">الصوت</span>
+      </div>
+    </div>
+    <div class="appointment-container">
+      <input type="text" id="patientName" placeholder="أدخل اسمك">
+      <button onclick="bookAppointment()">حجز موعد</button>
+    </div>
+    <div id="appointmentNumber">
+      <!-- سيتم عرض رقم الانتظار هنا -->
+    </div>
+    <div class="message-container">
+      <input type="text" id="messageText" placeholder="أدخل رسالتك">
+      <button onclick="sendMessage()">إرسال</button>
+    </div>
+    <div id="messages">
+      <!-- سيتم عرض الرسائل الواردة هنا -->
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.0/dist/simple-peer.min.js"></script>
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+  <script src="https://sdk.twilio.com/js/video/releases/2.19.0/twilio-video.min.js"></script>
+
+
+  <script>
+    Twilio.Video.connect('YourToken', { name: 'RoomName' }).then(room => {
+    console.log(`Connected to Room: ${room.name}`);
+});
+
+    const videoContainer = document.getElementById('videoContainer');
+    const waitingMessage = document.getElementById('waitingMessage');
+    const smallVideo = document.getElementById('smallVideo');
+    const patientMessages = document.getElementById('messages');
+    const appointmentNumber = document.getElementById('appointmentNumber');
+    let localStream;
+    let peerConnection;
+    const socket = new WebSocket('ws://192.168.93.3:8080');
+
+socket.onopen = () => {
+    console.log('Connected to WebSocket server');
+};
+
+
+socket.onmessage = async (event) => {
+    const message = JSON.parse(event.data);
+    if (message.type === 'offer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.send(JSON.stringify({ type: 'answer', answer: answer }));
+    } else if (message.type === 'candidate') {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+    }
+};
+
+async function joinCall() {
+    peerConnection = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    peerConnection.onicecandidate = ({ candidate }) => {
+        if (candidate) {
+            socket.send(JSON.stringify({ type: 'candidate', candidate: candidate }));
+        }
+    };
+    peerConnection.ontrack = (event) => {
+        const remoteVideo = document.createElement('video');
+        remoteVideo.srcObject = event.streams[0];
+        remoteVideo.autoplay = true;
+        document.getElementById('videoContainer').appendChild(remoteVideo);
+    };
+    const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+}
+
+
+    fetch('http://localhost/doctor.html', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ data: 'هذه هي البيانات التي أرسلها' })
+})
+  .then(response => response.text())
+  .then(data => console.log(data))
+  .catch(error => console.error(error));
+
+    async function joinCall() {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      smallVideo.srcObject = localStream;
+      smallVideo.autoplay = true;
+      smallVideo.style.display = 'block';
+      videoContainer.innerHTML = ''; // مسح المحتوى الحالي
+      waitingMessage.style.display = 'none';
+      videoContainer.appendChild(smallVideo); // إضافة الفيديو إلى الحاوية
+
+      await setupPeerConnection();
+
+      const offer = JSON.parse(localStorage.getItem('doctorOffer'));
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+
+      localStorage.setItem('patientAnswer', JSON.stringify(answer));
+    }
+
+    async function setupPeerConnection() {
+        peerConnection = new RTCPeerConnection({
+            
+            iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    {
+        urls: "turn:your-turn-server",
+        username: "username",
+        credential: "password"
+    }
+]
+
+            
+        });
+
+        peerConnection.onicecandidate = ({ candidate }) => {
+            if (candidate) {
+                const candidates = JSON.parse(localStorage.getItem('patientCandidates') || '[]');
+                candidates.push(candidate.toJSON());
+                localStorage.setItem('patientCandidates', JSON.stringify(candidates));
+            }
+        };
+
+        peerConnection.ontrack = (event) => {
+            const remoteVideo = document.createElement('video');
+            remoteVideo.srcObject = event.streams[0];
+            remoteVideo.autoplay = true;
+            videoContainer.appendChild(remoteVideo);
+        };
+
+        peerConnection.oniceconnectionstatechange = () => {
+            if (peerConnection.iceConnectionState === 'disconnected') {
+                endCall();
+            }
+        };
+    }
+
+    function endCall() {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        videoContainer.innerHTML = '<span>عرض الفيديو</span>';
+        waitingMessage.style.display = 'block';
+        smallVideo.style.display = 'none';
+      }
+      alert('تم إنهاء المكالمة.');
+    }
+
+    function toggleCamera() {
+      if (localStream) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        videoTrack.enabled = !videoTrack.enabled;
+        alert(videoTrack.enabled ? 'تم تشغيل الكاميرا.' : 'تم إيقاف الكاميرا.');
+      }
+    }
+
+    function toggleAudio() {
+      if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        audioTrack.enabled = !audioTrack.enabled;
+        alert(audioTrack.enabled ? 'تم تشغيل الصوت.' : 'تم إيقاف الصوت.');
+      }
+    }
+
+    function sendMessage() {
+      const message = document.getElementById('messageText').value;
+      if (message) {
+        displayMessage(`مريض: ${message}`, 'patient');
+        const messageArray = JSON.parse(localStorage.getItem('messages')) || [];
+        messageArray.push({ sender: 'patient', text: message });
+        localStorage.setItem('messages', JSON.stringify(messageArray));
+        document.getElementById('messageText').value = '';
+      }
+    }
+
+    function displayMessage(text, sender) {
+      const messageElement = document.createElement('p');
+      messageElement.textContent = text;
+      messageElement.className = sender;
+      patientMessages.appendChild(messageElement);
+    }
+
+    function bookAppointment() {
+      const patientName = document.getElementById('patientName').value;
+      if (patientName) {
+        const appointmentArray = JSON.parse(localStorage.getItem('appointments')) || [];
+        const appointmentNumber = appointmentArray.length + 1;
+        appointmentArray.push({ patient: patientName, number: appointmentNumber, status: 'pending' });
+        localStorage.setItem('appointments', JSON.stringify(appointmentArray));
+        document.getElementById('appointmentNumber').textContent = `رقم الانتظار: ${appointmentNumber}`;
+      }
+    }
+
+    window.onload = function() {
+      const messageArray = JSON.parse(localStorage.getItem('messages')) || [];
+      messageArray.forEach((msg) => {
+        displayMessage(`${msg.sender === 'patient' ? 'مريض' : 'طبيب'}: ${msg.text}`, msg.sender);
+      });
+
+      if (localStorage.getItem('startCall') === 'true') {
+        localStorage.removeItem('startCall');
+        joinCall();
+      }
+    };
+    
+  </script>
+</body>
+</html>
